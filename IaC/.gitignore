@@ -1,0 +1,4 @@
+*.sock
+*.cnf
+mysql_data/
+.terraform/
