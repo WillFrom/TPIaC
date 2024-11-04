@@ -1,0 +1,53 @@
+---
+- name: Configure HTTP server
+  hosts: nginx
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install NGINX
+      apt:
+        name: nginx
+        state: present
+
+    - name: Start and enable NGINX
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+- name: Configure PHP server
+  hosts: php
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install PHP-FPM
+      apt:
+        name: php8.3-fpm
+        state: present
+
+    - name: Start and enable PHP-FPM
+      service:
+        name: php8.3-fpm
+        state: started
+        enabled: yes
+
+- name: Create app directory on NGINX server
+  hosts: nginx
+  become: yes
+  tasks:
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/IaC/Etape3/app  # Assurez-vous que ce chemin est correct
+        state: directory
+
+    - name: Deploy PHP info page
+      copy:
+        dest: /home/ubuntu/IaC/Etape3/app/index.php  # Chemin correct
+        content: |
+          <?php phpinfo(); ?>
