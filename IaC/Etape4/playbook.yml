@@ -1,0 +1,79 @@
+- name: Configurer les serveurs pour le TP IaC #1 - Étape 2
+  hosts: all
+  become: true
+  tasks:
+    - name: Mise à jour des paquets
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+- name: Installer et configurer NGINX sur le serveur NGINX
+  hosts: nginx
+  become: true
+  tasks:
+    - name: Installer NGINX
+      apt:
+        name: nginx
+        state: present
+
+    - name: Copier le fichier de configuration pour NGINX
+      copy:
+        content: |
+          server {
+            listen 80;
+            server_name localhost;
+
+            location / {
+              root /var/www/html;
+              index index.php index.html;
+            }
+
+            location ~ \.php$ {
+              fastcgi_pass php:9000;
+              fastcgi_index index.php;
+              fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+              include fastcgi_params;
+            }
+          }
+        dest: /etc/nginx/sites-available/default
+        mode: '0644'
+
+    - name: Redémarrer NGINX
+      service:
+        name: nginx
+        state: restarted
+
+- name: Installer PHP-FPM sur le serveur PHP
+  hosts: php
+  become: true
+  tasks:
+    - name: Installer PHP et PHP-FPM
+      apt:
+        name: php-fpm
+        state: present
+
+    - name: Installer l'extension mysqli
+      apt:
+        name: php-mysqli
+        state: present
+
+- name: Installer et configurer MySQL sur le serveur MySQL
+  hosts: mysql
+  become: true
+  tasks:
+    - name: Installer MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Créer une base de données et un utilisateur pour les tests
+      mysql_db:
+        name: my_database
+        state: present
+
+    - name: Créer un utilisateur avec les droits appropriés
+      mysql_user:
+        name: my_user
+        password: my_password
+        priv: "my_database.*:ALL"
+        state: present
